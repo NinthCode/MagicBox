@@ -17,6 +17,8 @@
     </properties>
     <modules>
         <module>FileBatch</module>
+        <module>Cipher</module>
+        <module>fuckIedis</module>
     </modules>
 
     <dependencies>

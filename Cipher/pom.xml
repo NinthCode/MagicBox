@@ -9,6 +9,21 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>MagicBox-FileBatch</artifactId>
+    <artifactId>MagicBox-Cipher</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.jodd</groupId>
+            <artifactId>jodd-core</artifactId>
+            <version>${jodd.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>23.0</version>
+        </dependency>
+    </dependencies>
+
 
 </project>
