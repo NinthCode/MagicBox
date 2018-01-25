@@ -19,6 +19,7 @@
         <module>FileBatch</module>
         <module>Cipher</module>
         <module>fuckIedis</module>
+        <module>container</module>
     </modules>
 
     <dependencies>
