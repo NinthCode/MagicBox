@@ -20,6 +20,7 @@
         <module>Cipher</module>
         <module>fuckIedis</module>
         <module>container</module>
+        <module>excel</module>
     </modules>
 
     <dependencies>

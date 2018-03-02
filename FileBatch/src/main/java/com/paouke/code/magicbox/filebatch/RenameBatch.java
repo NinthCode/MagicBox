@@ -28,6 +28,6 @@ public class RenameBatch {
     }
     public static void main(String[] args){
         RenameBatch renameBatch = new RenameBatch();
-        renameBatch.rename("表情", ".gif", "C:\\Users\\admin\\Desktop\\CustomEmotions");
+        renameBatch.rename("表情", ".gif", "C:\\Users\\paouke\\Desktop\\eee");
     }
 }
