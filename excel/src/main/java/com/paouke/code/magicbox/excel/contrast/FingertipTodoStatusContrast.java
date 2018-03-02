@@ -31,8 +31,16 @@ import java.util.Map;
 public class FingertipTodoStatusContrast {
     public Map<String, String> fingertipTodoMap;
 
+    private boolean isHead = true;
+
     public FingertipTodoStatusContrast() {
         fingertipTodoMap = new HashMap<>();
+    }
+
+    private String getStringCell(Row row, int index) {
+        Cell cell = row.getCell(index);
+        cell.setCellType(CellType.STRING);
+        return cell.getStringCellValue();
     }
 
     private void readFingertipTodoXls(File fingertipXlsFile) throws Exception {
@@ -46,29 +54,20 @@ public class FingertipTodoStatusContrast {
         }
         for (int row = 0; row < rows; row++) {
             Row r = sheet.getRow(row);
-            if(tmp.getPhysicalNumberOfCells() < 3) {
+            if (tmp.getPhysicalNumberOfCells() < 3) {
                 continue;
             }
-            Cell cell = r.getCell(0);
-            cell.setCellType(CellType.STRING);
-            String todoSign = cell.getStringCellValue();
-            cell = r.getCell(1);
-            cell.setCellType(CellType.STRING);
-            String fpe = cell.getStringCellValue();
-            cell = r.getCell(2);
-            cell.setCellType(CellType.STRING);
-            String status = cell.getStringCellValue();
-            fingertipTodoMap.put(todoSign, status + ":" + fpe);
+            fingertipTodoMap.put(getStringCell(r, 0), getStringCell(r, 2) + ":" + getStringCell(r, 1));
         }
     }
 
     private boolean isEqual(String todoSign, String processorEmail) {
         String statusData = fingertipTodoMap.get(todoSign);
-        if(statusData == null) return false;
+        if (statusData == null) return false;
         String[] statusDatas = statusData.split(":");
         System.out.print("单子状态: " + statusDatas[1] + ", ");
         System.out.print("单子审批人: " + statusDatas[0] + ", ");
-        if(!("11".equals(statusDatas[1]) || "10".equals(statusDatas[1]))) {
+        if (!("11".equals(statusDatas[1]) || "10".equals(statusDatas[1]))) {
             return false;
         }
         try {
@@ -92,26 +91,20 @@ public class FingertipTodoStatusContrast {
     }
 
     private void writeDiffTodo(HSSFSheet sheet, String todoSign, String pe, String fpe, String fs) {
-        HSSFRow rows = sheet.createRow(sheet.getLastRowNum() + 1);
+        HSSFRow rows = isHead ?
+                (sheet.createRow(0)) : sheet.createRow(sheet.getLastRowNum() + 1);
+        isHead = false;
         rows.createCell(0).setCellValue(todoSign);
         rows.createCell(1).setCellValue(pe);
         rows.createCell(2).setCellValue(fpe);
         rows.createCell(3).setCellValue(fs);
     }
-    public static void main(String[] args) throws Exception {
-        File moaXlsFile = new File("D:\\doc\\fmc\\moa.xlsx");
-        File fingertipXlsFile = new File("D:\\doc\\fmc\\fing.xlsx");
 
+    private void contrast(File moaXlsFile, File fingertipXlsFile, File diffXlsFile) throws Exception {
         HSSFWorkbook hssfWorkbook = new HSSFWorkbook();
         HSSFSheet hssfSheet = hssfWorkbook.createSheet("sheet1");
-        HSSFRow hssfRow = hssfSheet.createRow(0);
-        hssfRow.createCell(0).setCellValue("报销单id");
-        hssfRow.createCell(1).setCellValue("MOA处理人");
-        hssfRow.createCell(2).setCellValue("指尖处理人");
-        hssfRow.createCell(3).setCellValue("status");
-
-        FingertipTodoStatusContrast fc = new FingertipTodoStatusContrast();
-        fc.readFingertipTodoXls(fingertipXlsFile);
+        writeDiffTodo(hssfSheet, "报销单id", "MOA处理人", "指尖处理人", "status");
+        readFingertipTodoXls(fingertipXlsFile);
         Workbook workbook = WorkbookFactory.create(moaXlsFile);
         Sheet sheet = workbook.getSheetAt(0);
         int rows = sheet.getLastRowNum() + 1;
@@ -124,23 +117,28 @@ public class FingertipTodoStatusContrast {
             if (tmp.getPhysicalNumberOfCells() < 2) {
                 continue;
             }
-            Cell cell = r.getCell(0);
-            cell.setCellType(CellType.STRING);
-            String todoSign = cell.getStringCellValue();
-            cell = r.getCell(1);
-            cell.setCellType(CellType.STRING);
-            String pe = cell.getStringCellValue();
-            System.out.print("检查TODO: " + ", ");
-            System.out.print("PE: " + r.getCell(1).getStringCellValue() + ", ");
-            if(! fc.isEqual(todoSign, r.getCell(1).getStringCellValue())) {
+            String todoSign = getStringCell(r, 0);
+            String pe = getStringCell(r, 1);
+            System.out.print("检查TODO: " + todoSign + ", ");
+            System.out.print("PE: " + pe + ", ");
+            if (!isEqual(todoSign, pe)) {
                 System.out.println("检查结果为双方不同！");
-                fc.writeDiffTodo(hssfSheet, todoSign, pe, fc.getFingertipPe(todoSign), fc.getFingertipStatus(todoSign));
+                writeDiffTodo(hssfSheet, todoSign, pe, getFingertipPe(todoSign), getFingertipStatus(todoSign));
             } else {
                 System.out.println("检查结果为双方相同！");
             }
         }
-        File xlsFile = new File("D:\\doc\\fmc\\diff.xls");
-        FileOutputStream xlsStream = new FileOutputStream(xlsFile);
+        FileOutputStream xlsStream = new FileOutputStream(diffXlsFile);
         hssfWorkbook.write(xlsStream);
+    }
+
+
+    public static void main(String[] args) throws Exception {
+        File moaXlsFile = new File("D:\\doc\\fmc\\moa.xlsx");
+        File fingertipXlsFile = new File("D:\\doc\\fmc\\fing.xlsx");
+        File diffXlsFile = new File("D:\\doc\\fmc\\diff.xls");
+        FingertipTodoStatusContrast fc = new FingertipTodoStatusContrast();
+        //a,b -> c
+        fc.contrast(moaXlsFile, fingertipXlsFile, diffXlsFile);
     }
 }
